@@ -5,6 +5,7 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const connectDB = require("./config/db");
 const colors = require("colors");
+const errorHandler = require("./middleware/error");
 
 // Load env vars
 dotenv.config({ path: "./config/config.env" });
@@ -28,6 +29,8 @@ if (process.env.NODE_ENV === "development") {
 //Mount routers
 app.use("/api/v1/bootcamps", bootcamps); //this will link the routes to the bootcamps file
 
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
@@ -38,7 +41,7 @@ const server = app.listen(PORT, () => {
 
 //handle unhandled promise rejections
 process.on("unhandledRejection", (err, promise) => {
-  console.log(`Error: ${err.message}`.red);
+  console.log(`Error: ${err.message}`);
   // Close Server and exit process
   server.close(() => process.exit(1));
 });

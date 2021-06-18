@@ -106,11 +106,24 @@ exports.getBootcamp = asyncHandler(async (req, res, next) => {
 // @route         POST /api/v1/bootcamps
 // @access        Private (need to be logged in or send a token)
 exports.createBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.create(req.body);
+  req.body.bootcamp = req.params.bootcampId;
+
+  const bootcamp = await Bootcamp.findById(req.params.bootcampId);
+
+  if (!bootcamp) {
+    return next(
+      new ErrorResponse(
+        `There is no bootcamp with Id ${req.params.bootcampId}`
+      ),
+      404
+    );
+  }
+
+  const course = await Course.create(req.body);
 
   res.status(201).json({
     success: true,
-    data: bootcamp,
+    data: course,
   });
 });
 

@@ -50,12 +50,22 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
 //@access       Private
 exports.addCourse = asyncHandler(async (req, res, next) => {
   req.body.bootcamp = req.params.bootcampId;
-
+  req.body.user = req.user.id;
   const bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
   if (!bootcamp) {
     return next(
       new ErrorResponse(`There is no bootcamp with id of ${req.params.id}`, 404)
+    );
+  }
+
+  //making sure that the bootcamp owner is the user that is logged in
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `You are not authorized to add a course to ${bootcamp.name}. Please contact bootcamp owner or admin.`,
+        401
+      )
     );
   }
 
@@ -73,6 +83,22 @@ exports.addCourse = asyncHandler(async (req, res, next) => {
 exports.updateCourse = asyncHandler(async (req, res, next) => {
   const course = await Course.findByIdAndUpdate(req.params.id, req.body);
 
+  //Check that the course exists:
+  if (!course) {
+    return next(
+      new ErrorResponse(`There is no course with id ${req.params.id}.`, 404)
+    );
+  }
+
+  //making sure that the course owner is the user that is logged in
+  if (course.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `You are not authorized to update course ${course.name}. Please contact the bootcamp owner or admin.`,
+        401
+      )
+    );
+  }
   res.status(200).json({
     success: true,
     data: course,
@@ -82,9 +108,21 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
 exports.deleteCourse = asyncHandler(async (req, res, next) => {
   const course = await Course.findByIdAndDelete(req.params.id);
 
+  //Checking that the course exists
   if (!course) {
     return next(
       new ErrorResponse(`There is no bootcamp with id ${req.params.id}`)
+    );
+  }
+
+  //Checking that the user is an admin or owns the course
+  //making sure that the course owner is the user that is logged in
+  if (course.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `You are not authorized to delete course ${course.name}. Please contact the bootcamp owner or admin.`,
+        401
+      )
     );
   }
 
